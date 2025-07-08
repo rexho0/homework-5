@@ -95,4 +95,39 @@ public class LoginInteractorTest {
         LoginInputBoundary interactor = new LoginInteractor(userRepository, failurePresenter);
         interactor.execute(inputData);
     }
+
+    @Test
+    public void successUserLoggedInTest() {
+        // Step 1: Set up the input and repository
+        LoginInputData inputData = new LoginInputData("Paul", "password");
+        LoginUserDataAccessInterface userRepository = new InMemoryUserDataAccessObject();
+
+        // Step 2: Add user to repository
+        UserFactory factory = new CommonUserFactory();
+        User user = factory.create("Paul", "password");
+        userRepository.save(user);
+
+        // Step 3: Assert that no user is logged in yet
+        assertNull(userRepository.getCurrentUser());
+
+        // Step 4: Set up presenter to verify use case success
+        LoginOutputBoundary successPresenter = new LoginOutputBoundary() {
+            @Override
+            public void prepareSuccessView(LoginOutputData outputData) {
+                assertEquals("Paul", outputData.getUsername());
+            }
+
+            @Override
+            public void prepareFailView(String error) {
+                fail("Use case failure is unexpected.");
+            }
+        };
+
+        // Step 5: Execute use case
+        LoginInputBoundary interactor = new LoginInteractor(userRepository, successPresenter);
+        interactor.execute(inputData);
+
+        // Step 6: Verify current user is updated
+        assertEquals("Paul", userRepository.getCurrentUser());
+    }
 }
